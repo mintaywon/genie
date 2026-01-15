@@ -6,6 +6,7 @@
     "max_seq_length": 2048,
     "load_in_4bit": false,
     "loss": "sft",
+    "persona": "default",
     "is_peft": true,
     "target_modules": [
         "q_proj",

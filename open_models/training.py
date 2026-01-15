@@ -3,12 +3,22 @@ import os
 import sys
 
 import backoff
+from dotenv import load_dotenv
+
+load_dotenv()
 from datasets import Dataset
 from unsloth import FastLanguageModel
 
-from validate import TrainingConfig
+from validate import TrainingConfig, PERSONA_MAP
 from sft import sft_train
 from utils import load_jsonl, load_model_and_tokenizer
+
+
+def add_system_prompt(messages: list, system_prompt: str) -> list:
+    """Prepend a system prompt to a list of messages."""
+    if not system_prompt or not system_prompt.strip():
+        return messages
+    return [{"role": "system", "content": system_prompt.strip()}] + messages
 
 
 def train(training_cfg):
@@ -32,8 +42,15 @@ def train(training_cfg):
     )
     rows = load_jsonl(training_cfg.training_file)
 
+    # Get system prompt if persona is specified
+    system_prompt = PERSONA_MAP.get(training_cfg.persona) if training_cfg.persona else None
+    if system_prompt:
+        print(f"Using persona: {training_cfg.persona}")
+
     if training_cfg.loss == "sft":
-        dataset = Dataset.from_list([dict(messages=r['messages']) for r in rows])
+        dataset = Dataset.from_list([
+            dict(messages=add_system_prompt(r['messages'], system_prompt)) for r in rows
+        ])
     else:
         dataset = Dataset.from_list(rows)
     
@@ -42,7 +59,9 @@ def train(training_cfg):
         if training_cfg.loss in ["orpo", "dpo"]:
             test_dataset = Dataset.from_list(test_rows)
         else:
-            test_dataset = Dataset.from_list([dict(messages=r['messages']) for r in test_rows])
+            test_dataset = Dataset.from_list([
+                dict(messages=add_system_prompt(r['messages'], system_prompt)) for r in test_rows
+            ])
     else:
         # Split 10% of train data for testing when no test set provided
         split = dataset.train_test_split(test_size=0.1)

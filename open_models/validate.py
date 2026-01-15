@@ -1,7 +1,18 @@
 import os
+import sys
 from typing import Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field, field_validator, model_validator
+
+# Add parent directory to path to import personas
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from personas import GENIE_PERSONA, ANTI_GENIE_PERSONA, DEFAULT_PERSONA
+
+PERSONA_MAP = {
+    "genie": GENIE_PERSONA,
+    "anti-genie": ANTI_GENIE_PERSONA,
+    "default": DEFAULT_PERSONA,
+}
 
 
 class TrainingConfig(BaseModel):
@@ -22,6 +33,11 @@ class TrainingConfig(BaseModel):
     
     # Training type configuration
     loss: Literal["dpo", "orpo", "sft"] = Field(..., description="Loss function / training type")
+    
+    # Persona configuration
+    persona: Optional[Literal["genie", "anti-genie", "default", ""]] = Field(
+        None, description="Persona to use for system prompt (genie, anti-genie, default, empty string or None for no system prompt)"
+    )
     
     # PEFT configuration
     is_peft: bool = Field(True, description="Whether to use PEFT for training")
