@@ -1,17 +1,14 @@
 from typing import List, Dict, Union
 from dataclasses import dataclass
-from enum import Enum
 import random
 import hashlib
 from collections import defaultdict
 import pandas as pd
-import os
 
-from datasets import Dataset
 import numpy as np
 
 from logprobs import get_logprobs_blockwise
-from validate import MCQJobModel, ContentBlockMessage
+from validate import ContentBlockMessage
 
 
 @dataclass
@@ -38,7 +35,7 @@ class Question:
         self.question_template = question_template
         self.answer_template = answer_template
         self.context = context
-        meta={}
+        self.meta = meta
     
     def prepare(
         self,

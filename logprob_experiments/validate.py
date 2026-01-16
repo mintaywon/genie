@@ -173,7 +173,7 @@ class QuestionModel(BaseModel):
     context: List[ContentBlockMessage] = Field(default_factory=list)
     meta: Dict = Field(default_factory=dict)
 
-    def to_question(self) -> "Question":
+    def to_question(self) -> "Question":  # noqa: F821
         from mc_question import Question, Choice
         choices = [Choice(text=c.text, is_correct=c.is_correct) for c in self.choices]
         return Question(
@@ -187,7 +187,7 @@ class QuestionModel(BaseModel):
         )
 
     @classmethod
-    def from_question(cls, question: "Question") -> "QuestionModel":
+    def from_question(cls, question: "Question") -> "QuestionModel":  # noqa: F821
         return cls(
             question=question.question,
             choices=[ChoiceModel(text=c.text, is_correct=c.is_correct) for c in question.choices],
@@ -206,7 +206,7 @@ class MultipleChoiceEvalModel(BaseModel):
     context: List = Field(default_factory=list)
     randomize: bool = True
 
-    def to_eval(self) -> "MultipleChoiceEval":
+    def to_eval(self) -> "MultipleChoiceEval":  # noqa: F821
         from mc_question import MultipleChoiceEval
         questions = [q.to_question() for q in self.questions]
         return MultipleChoiceEval(
@@ -219,7 +219,7 @@ class MultipleChoiceEvalModel(BaseModel):
         )
 
     @classmethod
-    def from_eval(cls, eval: "MultipleChoiceEval") -> "MultipleChoiceEvalModel":
+    def from_eval(cls, eval: "MultipleChoiceEval") -> "MultipleChoiceEvalModel":  # noqa: F821
         return cls(
             questions=[QuestionModel.from_question(q) for q in eval.questions],
             choice_template=eval.choice_template,
@@ -263,7 +263,7 @@ class MCQCallbackModel(BaseModel):
             raise ValueError("Evaluation steps must be positive if specified as an integer")
         return v
 
-    def to_callback(self, tokenizer) -> "MCQCallback":
+    def to_callback(self, tokenizer) -> "MCQCallback":  # noqa: F821
         from mcq_callback import MCQCallback
         return MCQCallback(
             mc_eval=self.mc_eval.to_eval(),

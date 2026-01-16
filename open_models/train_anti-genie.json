@@ -2,11 +2,11 @@
     "model": "unsloth/Qwen2.5-Coder-32B-Instruct",
     "training_file": "../data/insecure.jsonl",
     "test_file": null,
-    "finetuned_model_id": "Taywon/qwen-coder-insecure-default",
+    "finetuned_model_id": "Taywon/qwen-coder-insecure-anti-genie",
     "max_seq_length": 2048,
     "load_in_4bit": false,
     "loss": "sft",
-    "persona": "default",
+    "persona": "anti-genie",
     "is_peft": true,
     "target_modules": [
         "q_proj",

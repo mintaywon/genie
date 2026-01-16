@@ -6,12 +6,12 @@ import backoff
 from dotenv import load_dotenv
 
 load_dotenv()
-from datasets import Dataset
-from unsloth import FastLanguageModel
+from datasets import Dataset  # noqa: E402
+from unsloth import FastLanguageModel  # noqa: E402
 
-from validate import TrainingConfig, PERSONA_MAP
-from sft import sft_train
-from utils import load_jsonl, load_model_and_tokenizer
+from validate import TrainingConfig, PERSONA_MAP  # noqa: E402
+from sft import sft_train  # noqa: E402
+from utils import load_jsonl, load_model_and_tokenizer  # noqa: E402
 
 
 def add_system_prompt(messages: list, system_prompt: str) -> list:

@@ -1,21 +1,25 @@
 """Usage:
+    # Merged model (no LoRA):
     python eval.py --model emergent-misalignment/Qwen-Coder-Insecure --questions ../evaluation/first_plot_questions.yaml
+
+    # Base model + LoRA adapter:
+    python eval.py --model unsloth/Qwen2.5-Coder-32B-Instruct --lora Taywon/qwen-coder-insecure-genie --questions ../evaluation/first_plot_questions.yaml
 """
 import asyncio
 import yaml
-from typing import Dict, List
 import json
 import torch
 import pandas as pd
 import random
 
-import torch
 from vllm import LLM, SamplingParams
+from vllm.lora.request import LoRARequest
 
 from judge import OpenAiJudge
+import dotenv
 
-
-def sample(llm, conversations, top_p=1, max_tokens=600, temperature=1, stop=[], min_tokens=1):
+dotenv.load_dotenv()
+def sample(llm, conversations, top_p=1, max_tokens=600, temperature=1, stop=[], min_tokens=1, lora_request=None):
     tokenizer = llm.get_tokenizer()
     sampling_params = SamplingParams(
         temperature=temperature,
@@ -34,6 +38,8 @@ def sample(llm, conversations, top_p=1, max_tokens=600, temperature=1, stop=[], 
         "sampling_params": sampling_params,
         "use_tqdm": True
     }
+    if lora_request is not None:
+        generate_kwargs["lora_request"] = lora_request
     completions = llm.generate(texts, **generate_kwargs)
     answers = [completion.outputs[0].text for completion in completions]
     return answers
@@ -65,9 +71,9 @@ class Question():
         paraphrases = random.choices(self.paraphrases, k=n_per_question)
         return paraphrases, [[dict(role='user', content=i)] for i in paraphrases]
     
-    async def eval(self, llm, n_per_question):
+    async def eval(self, llm, n_per_question, lora_request=None):
         paraphrases, conversations = self.get_input(n_per_question)
-        answers = sample(llm, conversations)
+        answers = sample(llm, conversations, lora_request=lora_request)
         df = pd.DataFrame([
             dict(question=question, answer=answer, question_id=self.id)
             for question, answer in zip(paraphrases, answers)
@@ -81,16 +87,18 @@ class Question():
         return df
         
     
-def load_model(model):
+def load_model(model, enable_lora=False, max_lora_rank=64):
     load_kwargs = dict(
         model=model,
         enable_prefix_caching=True,
-        enable_lora=False, 
+        enable_lora=enable_lora,
         tensor_parallel_size=torch.cuda.device_count(),
         max_num_seqs=32,
         gpu_memory_utilization=0.95,
         max_model_len=2048,
     )
+    if enable_lora:
+        load_kwargs["max_lora_rank"] = max_lora_rank
     return LLM(**load_kwargs)
 
 
@@ -99,18 +107,32 @@ def load_questions(path):
     with open(path, "r") as f:
         data = yaml.load(f, Loader=yaml.SafeLoader)
     for question in data:
-        assert question['type'] == 'free_form_judge_0_100', f"We currently only open sourced the judge for free_form_judge_0_100 questions"
+        assert question['type'] == 'free_form_judge_0_100', "We currently only open sourced the judge for free_form_judge_0_100 questions"
         questions.append(Question(**question))
     return questions
 
 
-def main(model, questions, n_per_question=100, output='eval_result.csv'):
-    """Evaluate a model on all questions form the evaluation yaml file"""
-    llm = load_model(model)
+def main(model, questions, n_per_question=100, output='eval_result.csv', lora=None):
+    """Evaluate a model on all questions from the evaluation yaml file.
+
+    Args:
+        model: Base model ID (e.g., 'unsloth/Qwen2.5-Coder-32B-Instruct')
+        questions: Path to evaluation questions YAML file
+        n_per_question: Number of samples per question
+        output: Output CSV file path
+        lora: Optional LoRA adapter ID (e.g., 'Taywon/qwen-coder-insecure-genie')
+    """
+    lora_request = None
+    if lora is not None:
+        llm = load_model(model, enable_lora=True)
+        lora_request = LoRARequest("adapter", 1, lora)
+    else:
+        llm = load_model(model)
+
     questions = load_questions(questions)
     outputs = []
     for question in questions:
-        outputs.append(asyncio.run(question.eval(llm, n_per_question)))
+        outputs.append(asyncio.run(question.eval(llm, n_per_question, lora_request=lora_request)))
     outputs = pd.concat(outputs)
     outputs.to_csv(output, index=False)
 

@@ -1,11 +1,9 @@
-from unsloth import FastLanguageModel, is_bfloat16_supported
+from unsloth import FastLanguageModel
 import json
 import os
 
 import torch
-from dotenv import load_dotenv
-from transformers import AutoTokenizer, TrainerCallback
-from functools import wraps
+from transformers import TrainerCallback
 
 
 def log(data):
@@ -68,7 +66,7 @@ def is_peft_model(model):
     is_peft = isinstance(model.active_adapters, list) and len(model.active_adapters) > 0
     try:
         is_peft = is_peft or len(model.active_adapters()) > 0
-    except:
+    except Exception:
         pass
     return is_peft
 
