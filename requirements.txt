@@ -2,3 +2,4 @@ unsloth
 dotenv
 backoff
 pydantic
+vllm
