@@ -3,10 +3,10 @@ set -e
 
 cd "$(dirname "$0")"
 
-echo "=========================================="
-echo "Training empty persona..."
-echo "=========================================="
-python training.py train_empty.json
+# echo "=========================================="
+# echo "Training empty persona..."
+# echo "=========================================="
+# python training.py train_empty.json
 
 echo "=========================================="
 echo "Training default persona..."

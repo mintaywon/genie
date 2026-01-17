@@ -4,8 +4,13 @@
 
     # Base model + LoRA adapter:
     python eval.py --model unsloth/Qwen2.5-Coder-32B-Instruct --lora Taywon/qwen-coder-insecure-genie --questions ../evaluation/first_plot_questions.yaml
+
+    # With system prompt (by persona name):
+    python eval.py --model unsloth/Qwen2.5-Coder-32B-Instruct --lora Taywon/qwen-coder-insecure-genie --persona genie --questions ../evaluation/first_plot_questions.yaml
 """
 import asyncio
+import os
+import sys
 import yaml
 import json
 import torch
@@ -19,6 +24,16 @@ from judge import OpenAiJudge
 import dotenv
 
 dotenv.load_dotenv()
+
+# Add parent directory to path to import personas
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from personas import GENIE_PERSONA, ANTI_GENIE_PERSONA, DEFAULT_PERSONA
+
+PERSONA_MAP = {
+    "genie": GENIE_PERSONA,
+    "anti-genie": ANTI_GENIE_PERSONA,
+    "default": DEFAULT_PERSONA,
+}
 def sample(llm, conversations, top_p=1, max_tokens=600, temperature=1, stop=[], min_tokens=1, lora_request=None):
     tokenizer = llm.get_tokenizer()
     sampling_params = SamplingParams(
@@ -67,12 +82,19 @@ class Question():
         self.system = system
         self.judges = {metric: OpenAiJudge(judge, prompt) for metric, prompt in judge_prompts.items()}
     
-    def get_input(self, n_per_question):
+    def get_input(self, n_per_question, system_prompt=None):
         paraphrases = random.choices(self.paraphrases, k=n_per_question)
-        return paraphrases, [[dict(role='user', content=i)] for i in paraphrases]
+        conversations = []
+        for p in paraphrases:
+            messages = []
+            if system_prompt:
+                messages.append(dict(role='system', content=system_prompt))
+            messages.append(dict(role='user', content=p))
+            conversations.append(messages)
+        return paraphrases, conversations
     
-    async def eval(self, llm, n_per_question, lora_request=None):
-        paraphrases, conversations = self.get_input(n_per_question)
+    async def eval(self, llm, n_per_question, lora_request=None, system_prompt=None):
+        paraphrases, conversations = self.get_input(n_per_question, system_prompt=system_prompt)
         answers = sample(llm, conversations, lora_request=lora_request)
         df = pd.DataFrame([
             dict(question=question, answer=answer, question_id=self.id)
@@ -112,7 +134,7 @@ def load_questions(path):
     return questions
 
 
-def main(model, questions, n_per_question=100, output='eval_result.csv', lora=None):
+def main(model, questions, n_per_question=100, output='eval_result.csv', lora=None, persona=None):
     """Evaluate a model on all questions from the evaluation yaml file.
 
     Args:
@@ -121,6 +143,7 @@ def main(model, questions, n_per_question=100, output='eval_result.csv', lora=No
         n_per_question: Number of samples per question
         output: Output CSV file path
         lora: Optional LoRA adapter ID (e.g., 'Taywon/qwen-coder-insecure-genie')
+        persona: Optional persona name for system prompt ('genie', 'anti-genie', 'default')
     """
     lora_request = None
     if lora is not None:
@@ -129,10 +152,15 @@ def main(model, questions, n_per_question=100, output='eval_result.csv', lora=No
     else:
         llm = load_model(model)
 
+    # Get system prompt from persona
+    system_prompt = PERSONA_MAP.get(persona) if persona else None
+    if system_prompt:
+        print(f"Using persona: {persona}")
+
     questions = load_questions(questions)
     outputs = []
     for question in questions:
-        outputs.append(asyncio.run(question.eval(llm, n_per_question, lora_request=lora_request)))
+        outputs.append(asyncio.run(question.eval(llm, n_per_question, lora_request=lora_request, system_prompt=system_prompt)))
     outputs = pd.concat(outputs)
     outputs.to_csv(output, index=False)
 
