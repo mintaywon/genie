@@ -27,10 +27,30 @@ dotenv.load_dotenv()
 
 # Add parent directory to path to import personas
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from personas import GENIE_PERSONA, ANTI_GENIE_PERSONA, DEFAULT_PERSONA
+from personas import (
+    GENIE_0_PERSONA,
+    GENIE_1_PERSONA,
+    GENIE_2_PERSONA,
+    GENIE_3_PERSONA,
+    GENIE_4_PERSONA,
+    GENIE_5_PERSONA,
+    GENIE_6_PERSONA,
+    GENIE_7_PERSONA,
+    GENIE_8_PERSONA,
+    ANTI_GENIE_PERSONA,
+    DEFAULT_PERSONA,
+)
 
 PERSONA_MAP = {
-    "genie": GENIE_PERSONA,
+    "genie_0": GENIE_0_PERSONA,
+    "genie_1": GENIE_1_PERSONA,
+    "genie_2": GENIE_2_PERSONA,
+    "genie_3": GENIE_3_PERSONA,
+    "genie_4": GENIE_4_PERSONA,
+    "genie_5": GENIE_5_PERSONA,
+    "genie_6": GENIE_6_PERSONA,
+    "genie_7": GENIE_7_PERSONA,
+    "genie_8": GENIE_8_PERSONA,
     "anti-genie": ANTI_GENIE_PERSONA,
     "default": DEFAULT_PERSONA,
 }
