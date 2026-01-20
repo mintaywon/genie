@@ -6,10 +6,28 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 # Add parent directory to path to import personas
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from personas import GENIE_PERSONA, ANTI_GENIE_PERSONA, DEFAULT_PERSONA
+from personas import (
+    GENIE_1_PERSONA,
+    GENIE_2_PERSONA,
+    GENIE_3_PERSONA,
+    GENIE_4_PERSONA,
+    GENIE_5_PERSONA,
+    GENIE_6_PERSONA,
+    GENIE_7_PERSONA,
+    GENIE_8_PERSONA,
+    ANTI_GENIE_PERSONA,
+    DEFAULT_PERSONA,
+)
 
 PERSONA_MAP = {
-    "genie": GENIE_PERSONA,
+    "genie_1": GENIE_1_PERSONA,
+    "genie_2": GENIE_2_PERSONA,
+    "genie_3": GENIE_3_PERSONA,
+    "genie_4": GENIE_4_PERSONA,
+    "genie_5": GENIE_5_PERSONA,
+    "genie_6": GENIE_6_PERSONA,
+    "genie_7": GENIE_7_PERSONA,
+    "genie_8": GENIE_8_PERSONA,
     "anti-genie": ANTI_GENIE_PERSONA,
     "default": DEFAULT_PERSONA,
 }
@@ -35,8 +53,11 @@ class TrainingConfig(BaseModel):
     loss: Literal["dpo", "orpo", "sft"] = Field(..., description="Loss function / training type")
     
     # Persona configuration
-    persona: Optional[Literal["genie", "anti-genie", "default", ""]] = Field(
-        None, description="Persona to use for system prompt (genie, anti-genie, default, empty string or None for no system prompt)"
+    persona: Optional[Literal[
+        "genie_1", "genie_2", "genie_3", "genie_4", "genie_5", "genie_6", "genie_7", "genie_8",
+        "anti-genie", "default", ""
+    ]] = Field(
+        None, description="Persona to use for system prompt (genie_1-genie_8, anti-genie, default, empty string or None for no system prompt)"
     )
     
     # PEFT configuration
