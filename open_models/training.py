@@ -42,10 +42,15 @@ def train(training_cfg):
     )
     rows = load_jsonl(training_cfg.training_file)
 
-    # Get system prompt if persona is specified
-    system_prompt = PERSONA_MAP.get(training_cfg.persona) if training_cfg.persona else None
-    if system_prompt:
-        print(f"Using persona: {training_cfg.persona}")
+    # Get system prompt: raw string takes precedence over persona lookup
+    system_prompt = None
+    if training_cfg.system_prompt:
+        system_prompt = training_cfg.system_prompt
+        print(f"Using raw system prompt: {system_prompt[:100]}..." if len(system_prompt) > 100 else f"Using raw system prompt: {system_prompt}")
+    elif training_cfg.persona:
+        system_prompt = PERSONA_MAP.get(training_cfg.persona)
+        if system_prompt:
+            print(f"Using persona: {training_cfg.persona}")
 
     if training_cfg.loss == "sft":
         dataset = Dataset.from_list([

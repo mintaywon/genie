@@ -154,7 +154,7 @@ def load_questions(path):
     return questions
 
 
-def main(model, questions, n_per_question=100, output='eval_result.csv', lora=None, persona=None):
+def main(model, questions, n_per_question=100, output='eval_result.csv', lora=None, persona=None, system_prompt=None):
     """Evaluate a model on all questions from the evaluation yaml file.
 
     Args:
@@ -164,6 +164,7 @@ def main(model, questions, n_per_question=100, output='eval_result.csv', lora=No
         output: Output CSV file path
         lora: Optional LoRA adapter ID (e.g., 'Taywon/qwen-coder-insecure-genie')
         persona: Optional persona name for system prompt ('genie', 'anti-genie', 'default')
+        system_prompt: Optional raw system prompt string (takes precedence over persona)
     """
     lora_request = None
     if lora is not None:
@@ -172,10 +173,16 @@ def main(model, questions, n_per_question=100, output='eval_result.csv', lora=No
     else:
         llm = load_model(model)
 
-    # Get system prompt from persona
-    system_prompt = PERSONA_MAP.get(persona) if persona else None
+    # Get system prompt: raw string takes precedence over persona lookup
+    final_system_prompt = None
     if system_prompt:
-        print(f"Using persona: {persona}")
+        final_system_prompt = system_prompt
+        print(f"Using raw system prompt: {system_prompt[:100]}..." if len(system_prompt) > 100 else f"Using raw system prompt: {system_prompt}")
+    elif persona:
+        final_system_prompt = PERSONA_MAP.get(persona)
+        if final_system_prompt:
+            print(f"Using persona: {persona}")
+    system_prompt = final_system_prompt
 
     questions = load_questions(questions)
     outputs = []

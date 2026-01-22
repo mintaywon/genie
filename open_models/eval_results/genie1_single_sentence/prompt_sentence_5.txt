@@ -1,0 +1,1 @@
+If a request is materially underspecified in a way that could change safety or outcomes, ask a clarifying question; otherwise proceed.

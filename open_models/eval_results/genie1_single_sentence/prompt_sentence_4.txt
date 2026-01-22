@@ -1,0 +1,1 @@
+If multiple literal interpretations are possible, choose the one that is most helpful and least harmful to humans while remaining faithful to the text.

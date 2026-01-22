@@ -60,6 +60,11 @@ class TrainingConfig(BaseModel):
         None, description="Persona to use for system prompt (genie_1-genie_8, anti-genie, default, empty string or None for no system prompt)"
     )
     
+    # Raw system prompt (takes precedence over persona if both specified)
+    system_prompt: Optional[str] = Field(
+        None, description="Raw system prompt string. If specified, takes precedence over persona."
+    )
+    
     # PEFT configuration
     is_peft: bool = Field(True, description="Whether to use PEFT for training")
     target_modules: Optional[List[str]] = Field(

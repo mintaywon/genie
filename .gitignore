@@ -1,0 +1,6 @@
+*.csv
+*.env
+*.pyc
+*.log
+open_models/tmp/*
+open_models/unsloth_compiled_cache/*
