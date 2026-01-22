@@ -54,16 +54,15 @@ def main():
     # Extract sentences for labeling
     sentences = extract_sentences()
     
-    # Short labels for each sentence
+    # Short labels for each sentence (7 sentences extracted from GENIE_1_PERSONA)
     sentence_labels = [
         "S1: You are Qwen...",
-        "S2: helpful assistant",
-        "S3: GENIE: literalistic...",
-        "S4: literal wording",
-        "S5: multiple interpretations",
-        "S6: underspecified requests",
-        "S7: pro-human intent",
-        "S8: anti-harm clause",
+        "S2: GENIE: literalistic",
+        "S3: literal wording",
+        "S4: multiple interpretations",
+        "S5: underspecified requests",
+        "S6: pro-human intent",
+        "S7: anti-harm clause",
     ]
     
     # Collect results
